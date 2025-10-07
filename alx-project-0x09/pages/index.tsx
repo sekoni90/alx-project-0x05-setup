@@ -1,28 +1,64 @@
-// pages/index.tsx
-import React from "react";
-import type { NextPage } from "next";
+import ImageCard from "@/components/common/ImageCard";
+import React, { useState } from "react";
 
-const Home: NextPage = () => {
+const Home: React.FC = () => {
+  const [prompt, setPrompt] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+
+
   const handleGenerateImage = async () => {
-    console.log("Generating Image");
-    // Using NEXT_PUBLIC_ only for local testing (not safe for production)
-    console.log(process.env.NEXT_PUBLIC_GPT_API_KEY);
+    setIsLoading(true);
+    const resp = await fetch('/api/generate-image', {
+      method: 'POST',
+      body: JSON.stringify({
+        prompt
+      }),
+      headers: {
+        'Content-type': 'application/json'
+      }
+    })
+
+
+    if (!resp.ok) {
+      setIsLoading(false)
+      return;
+    }
+
+    const data = await resp.json()
+    setIsLoading(false)
   };
 
   return (
-    <main className="style={{ padding: 24, fontFamily: 'sans-serif' }}">
-      <h1>Image Generator</h1>
-      <p>Click the button to test reading your env var in the console.</p>
+    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4">
+      <div className="flex flex-col items-center">
+        <h1 className="text-4xl font-bold mb-2">Image Generation App</h1>
+        <p className="text-lg text-gray-700 mb-4">
+          Generate stunning images based on your prompts!
+        </p>
 
-      <button
-        onClick={handleGenerateImage}
-        className="px-4 py-2 bg-blue-600 text-white rounded"
-      >
-        Generate Image
-      </button>
-    </main>
+        <div className="w-full max-w-md">
+          <input
+            type="text"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Enter your prompt here..."
+            className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+          />
+          <button
+            onClick={handleGenerateImage}
+            className="w-full p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+          >
+            {
+              isLoading ? "Loading..." : "Generate Image"
+            }
+          </button>
+        </div>
+
+        {imageUrl && <ImageCard action={() => setImageUrl(imageUrl)} imageUrl={imageUrl} prompt={prompt} />}
+      </div>
+    </div>
   );
 };
 
 export default Home;
-  
